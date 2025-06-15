@@ -13,6 +13,7 @@ func NewServerPool() *ServerPool {
 }
 
 func (svp *ServerPool) AddServer(server *types.Server) error {
+	svp.Servers = append(svp.Servers, server)
 	return nil
 }
 
