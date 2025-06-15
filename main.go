@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"net/http"
 	"time"
 
 	balancer "github.com/x-sushant-x/Balancer/core"
@@ -49,4 +52,25 @@ func main() {
 
 	balancer.NewRoundRobinBalancer(pool)
 
+	lb := balancer.NewLoadBalancer(&balancer.RoundRobin)
+	distributeLoad(3000, lb)
+
+	select {}
+}
+
+func distributeLoad(port int, lb balancer.LoadBalancer) {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", lb.Serve)
+
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%d", port),
+		Handler: mux,
+	}
+
+	log.Printf("Starting load balancer on port %d", port)
+
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatalf("Load balancer on port %d failed: %v", port, err)
+	}
 }

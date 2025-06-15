@@ -2,15 +2,24 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func startServer(port int) {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello From Server With Port: %d", port)
+	mux.HandleFunc("/api/v1", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(404)
+		res := fmt.Sprintf("Hello From Server: %d", port)
+		io.Copy(w, strings.NewReader(res))
+	})
+
+	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(404)
+		io.Copy(w, strings.NewReader("Not Found"))
 	})
 
 	server := &http.Server{

@@ -1,6 +1,7 @@
 package balancer
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -61,6 +62,12 @@ func (lb *LoadBalancer) Serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	byteResp, err := io.ReadAll(res.Body)
+	if err != nil {
+		http.Error(w, "Failed to read response body", http.StatusInternalServerError)
+		return
+	}
+
 	defer res.Body.Close()
 
 	for k, values := range res.Header {
@@ -71,5 +78,5 @@ func (lb *LoadBalancer) Serve(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(res.StatusCode)
 
-	io.Copy(w, r.Body)
+	fmt.Fprint(w, string(byteResp))
 }
