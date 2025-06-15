@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/x-sushant-x/Balancer/types"
 )
@@ -56,7 +57,11 @@ func (lb *LoadBalancer) Serve(w http.ResponseWriter, r *http.Request) {
 
 	req.Header.Set("X-Forwarded-For", r.RemoteAddr)
 
-	res, err := http.DefaultClient.Do(req)
+	client := &http.Client{
+		Timeout: time.Second * 30,
+	}
+
+	res, err := client.Do(req)
 	if err != nil {
 		http.Error(w, "Failed to reach backend server", http.StatusBadGateway)
 		return

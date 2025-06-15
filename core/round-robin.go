@@ -9,22 +9,20 @@ import (
 )
 
 var (
-	idx        = 0
-	once       = sync.Once{}
-	RoundRobin RoundRobinBalancer
+	once = sync.Once{}
 )
 
 type RoundRobinBalancer struct {
 	pool *pool.ServerPool
 	mu   sync.Mutex
+	idx  int
 }
 
-func NewRoundRobinBalancer(pool *pool.ServerPool) {
-	once.Do(func() {
-		RoundRobin = RoundRobinBalancer{
-			pool: pool,
-		}
-	})
+func NewRoundRobinBalancer(pool *pool.ServerPool) *RoundRobinBalancer {
+	return &RoundRobinBalancer{
+		pool: pool,
+		idx:  -1,
+	}
 }
 
 func (rb *RoundRobinBalancer) GetNextServer() (*types.Server, error) {
@@ -35,10 +33,11 @@ func (rb *RoundRobinBalancer) GetNextServer() (*types.Server, error) {
 	}
 
 	rb.mu.Lock()
-	idx = (idx + 1) % len(servers)
 	defer rb.mu.Unlock()
 
-	selectedServer := servers[idx]
+	rb.idx = (rb.idx + 1) % len(servers)
+
+	selectedServer := servers[rb.idx]
 
 	return selectedServer, nil
 }

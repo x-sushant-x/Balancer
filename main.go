@@ -50,9 +50,9 @@ func main() {
 		pool.AddServer(&server)
 	}
 
-	balancer.NewRoundRobinBalancer(pool)
+	rb := balancer.NewRoundRobinBalancer(pool)
 
-	lb := balancer.NewLoadBalancer(&balancer.RoundRobin)
+	lb := balancer.NewLoadBalancer(rb)
 	distributeLoad(3000, lb)
 
 	select {}
