@@ -11,4 +11,6 @@ type Server struct {
 	URL             string
 	IsHealthy       bool
 	LastHealthCheck time.Time
+	FailureCount    int
+	SuccessCount    int
 }
