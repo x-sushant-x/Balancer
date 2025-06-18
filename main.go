@@ -21,6 +21,8 @@ var servers = []types.Server{
 		URL:             "http://localhost:3001",
 		IsHealthy:       true,
 		LastHealthCheck: time.Now(),
+		HealthyAfter:    3,
+		UnhealthyAfter:  2,
 	},
 	{
 		ID:              "2",
@@ -31,6 +33,8 @@ var servers = []types.Server{
 		URL:             "http://localhost:3002",
 		IsHealthy:       true,
 		LastHealthCheck: time.Now(),
+		HealthyAfter:    3,
+		UnhealthyAfter:  2,
 	}, {
 		ID:              "3",
 		Name:            "Server 3",
@@ -40,6 +44,8 @@ var servers = []types.Server{
 		URL:             "http://localhost:3003",
 		IsHealthy:       true,
 		LastHealthCheck: time.Now(),
+		HealthyAfter:    3,
+		UnhealthyAfter:  2,
 	},
 }
 
