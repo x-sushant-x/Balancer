@@ -1,6 +1,7 @@
 package healthchecker
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -24,8 +25,27 @@ func NewHealthChecker(interval time.Duration, pool *serverPool.ServerPool) *Heal
 func (hc *HealthChecker) CheckServersHealth() {
 	servers := hc.pool.GetAllServers()
 
-	for _, server := range servers {
-		doHTTPRequest(server)
+	for {
+		log.Println("Starting Health Check")
+
+		for _, server := range servers {
+			if server.HealthCheckURL != "" {
+				doHTTPRequest(server)
+			} else {
+				// Some kind of notification system
+				log.Printf("Health Check URL not specified for server: %s\n", server.URL)
+			}
+		}
+
+		fmt.Println()
+		fmt.Println()
+		fmt.Println("Server Status")
+
+		for _, server := range servers {
+			fmt.Printf("%s: %t: %d\n", server.URL, server.IsHealthy, server.FailureCount)
+		}
+
+		time.Sleep(hc.interval)
 	}
 
 }
@@ -36,31 +56,42 @@ func doHTTPRequest(server *types.Server) {
 	req, err := http.NewRequest(http.MethodGet, server.HealthCheckURL, nil)
 	if err != nil {
 		// Some kind of notification system
+		updateServerUnhealthyStatus(server)
 		return
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
 		// Some kind of notification system
+		updateServerUnhealthyStatus(server)
 		return
 	}
 
 	if resp.StatusCode == http.StatusOK && !server.IsHealthy {
-		server.SuccessCount++
-
-		if server.SuccessCount >= server.HealthyAfter {
-			server.IsHealthy = true
-			server.SuccessCount = 0
-			server.FailureCount = 0
-		}
+		updateServerHealthyStatus(server)
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Println("Health Check Failed: Server did not responded with 200 status code.")
-		server.FailureCount++
+		updateServerUnhealthyStatus(server)
+	}
+}
 
-		if server.FailureCount >= server.UnhealthyAfter && server.IsHealthy {
-			server.IsHealthy = false
-		}
+func updateServerUnhealthyStatus(server *types.Server) {
+	log.Printf("Health Check Failed: Server did not responded with 200 status code. Server: %v\n", server.HealthCheckURL)
+
+	server.FailureCount++
+
+	if server.FailureCount >= server.UnhealthyAfter && server.IsHealthy {
+		server.IsHealthy = false
+	}
+}
+
+func updateServerHealthyStatus(server *types.Server) {
+	server.SuccessCount++
+
+	if server.SuccessCount >= server.HealthyAfter && !server.IsHealthy {
+		server.IsHealthy = true
+		server.SuccessCount = 0
+		server.FailureCount = 0
 	}
 }
