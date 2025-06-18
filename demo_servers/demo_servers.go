@@ -17,6 +17,10 @@ func startServer(port int) {
 		io.Copy(w, strings.NewReader(res))
 	})
 
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+	})
+
 	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(404)
 		io.Copy(w, strings.NewReader("Not Found"))

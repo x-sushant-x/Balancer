@@ -41,10 +41,6 @@ func (hc *HealthChecker) CheckServersHealth() {
 		fmt.Println()
 		fmt.Println("Server Status")
 
-		for _, server := range servers {
-			fmt.Printf("%s: %t: %d\n", server.URL, server.IsHealthy, server.FailureCount)
-		}
-
 		time.Sleep(hc.interval)
 	}
 
@@ -79,7 +75,9 @@ func doHTTPRequest(server *types.Server) {
 func updateServerUnhealthyStatus(server *types.Server) {
 	log.Printf("Health Check Failed: Server did not responded with 200 status code. Server: %v\n", server.HealthCheckURL)
 
-	server.FailureCount++
+	if server.IsHealthy {
+		server.FailureCount++
+	}
 
 	if server.FailureCount >= server.UnhealthyAfter && server.IsHealthy {
 		server.IsHealthy = false
